@@ -28,9 +28,9 @@ GitHub Actionsが自動でプロモーション動画(縦型 1080x1920、テロ�
 キャプションは `video-automation/scripts/generate-caption.js` のテンプレートから自動生成される
 (無料・API不要)。文言を変更したい場合はこのファイルを編集する。
 
-生成された動画は、Instagram側が取得できるよう一時的にVercel Blob(無料ストレージ)へ
-アップロードされ、公開URLが発行される。これを使うには `BLOB_READ_WRITE_TOKEN` を
-GitHub Secretsに設定しておく必要がある(Vercelダッシュボードの Storage → Blob から発行)。
+生成された動画は、このリポジトリが公開リポジトリであることを利用し、
+`raw.githubusercontent.com` の公開URL経由でInstagram側から直接取得できるようにしている
+(追加のアップロード処理は不要)。
 
 ## BGMを追加したい場合
 
