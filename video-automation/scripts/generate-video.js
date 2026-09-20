@@ -8,6 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { execFileSync } = require("child_process");
+const { generateCaption } = require("./generate-caption");
 
 const ROOT = path.join(__dirname, "..");
 const INPUT_DIR = path.join(ROOT, "input");
@@ -146,8 +147,25 @@ function main() {
 
   fs.rmSync(workDir, { recursive: true, force: true });
 
+  const caption = generateCaption(new Date());
+  const captionPath = outPath.replace(/\.mp4$/, ".caption.txt");
+  fs.writeFileSync(captionPath, caption, "utf-8");
+
   console.log(`Generated: ${outPath}`);
-  console.log(`::set-output name=video_path::${outPath}`);
+  console.log(`Caption: ${captionPath}`);
+
+  if (process.env.GITHUB_OUTPUT) {
+    const delimiter = `EOF_CAPTION_${Date.now()}`;
+    const lines = [
+      `video_path=${outPath}`,
+      `video_filename=${path.basename(outPath)}`,
+      `caption<<${delimiter}`,
+      caption,
+      delimiter,
+      "",
+    ].join("\n");
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, lines);
+  }
 }
 
 main();

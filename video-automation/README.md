@@ -9,12 +9,28 @@ GitHub Actionsが自動でプロモーション動画(縦型 1080x1920、テロ�
 1. GitHubのリポジトリページを開き、`video-automation/input` フォルダに入る
 2. 「Add file」→「Upload files」から、スマホの写真・動画をドラッグ&ドロップ
 3. 画面下部でそのままコミット(Commit changes)
-4. 数分待つと、GitHub Actionsが自動で動画を生成し、`video-automation/output/` に
-   `tanabata-field-日時.mp4` という名前で追加される
-5. `video-automation/output/` を開き、生成された動画をダウンロードしてInstagramに投稿する
+4. 数分待つと、GitHub Actionsが自動で
+   - 動画を生成して `video-automation/output/` に追加
+   - キャプションを自動生成
+   - Instagram連携が設定済みなら、そのままInstagramのReelsとして自動投稿
+5. Instagram連携が未設定の場合は、`video-automation/output/` から動画をダウンロードして
+   手動で投稿する
 
 処理が終わった素材は自動的に `video-automation/input/_archive/` に移動するので、
 次にアップロードする際は新しい写真・動画だけを入れればよい。
+
+## Instagramへの自動投稿
+
+`INSTAGRAM_ACCESS_TOKEN` と `INSTAGRAM_BUSINESS_ACCOUNT_ID` をGitHub Secretsに設定すると、
+動画生成後に自動でInstagramのReelsとして投稿される。未設定の場合はこのステップはスキップされ、
+動画とキャプションが `video-automation/output/` に残るだけになる(手動投稿用)。
+
+キャプションは `video-automation/scripts/generate-caption.js` のテンプレートから自動生成される
+(無料・API不要)。文言を変更したい場合はこのファイルを編集する。
+
+この機能を使うにはリポジトリの GitHub Pages(Settings → Pages → Source: GitHub Actions)を
+有効にしておく必要がある。生成された動画をInstagramが取得できるよう、一時的に公開URLとして
+ホスティングするために使用する。
 
 ## BGMを追加したい場合
 
