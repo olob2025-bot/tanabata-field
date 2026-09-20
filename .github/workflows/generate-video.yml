@@ -1,0 +1,42 @@
+name: Generate Promotional Video
+
+on:
+  push:
+    paths:
+      - "video-automation/input/**"
+      - "video-automation/bgm/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-video-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ffmpeg and Japanese font
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-cjk
+
+      - name: Generate video
+        run: node video-automation/scripts/generate-video.js
+
+      - name: Commit generated video
+        run: |
+          git config user.name "tanabata-video-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add video-automation/output video-automation/input
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "自動生成: プロモーション動画"
+          git pull --rebase origin "${{ github.ref_name }}"
+          git push origin HEAD:"${{ github.ref_name }}"
