@@ -68,7 +68,7 @@ async function handleEvent(event) {
   let replyText;
   try {
     const completion = await anthropic.messages.create({
-      model: "claude-sonnet-5",
+      model: "claude-haiku-4-5",
       max_tokens: 400,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userText }],
