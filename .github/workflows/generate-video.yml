@@ -8,8 +8,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: generate-video-${{ github.ref }}
@@ -18,8 +16,6 @@ concurrency:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,6 +24,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Install Node dependencies
+        run: npm install
 
       - name: Install ffmpeg and Japanese font
         run: |
@@ -52,28 +51,17 @@ jobs:
           git pull --rebase origin "${{ github.ref_name }}"
           git push origin HEAD:"${{ github.ref_name }}"
 
-      - name: Prepare Pages site with the video
+      - name: Upload video to Vercel Blob
         if: steps.generate.outputs.video_path != ''
-        run: |
-          mkdir -p _site/videos
-          cp "${{ steps.generate.outputs.video_path }}" "_site/videos/${{ steps.generate.outputs.video_filename }}"
-
-      - name: Upload Pages artifact
-        if: steps.generate.outputs.video_path != ''
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-
-      - name: Deploy to GitHub Pages
-        if: steps.generate.outputs.video_path != ''
-        id: deployment
-        uses: actions/deploy-pages@v4
+        id: upload
+        env:
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+        run: node video-automation/scripts/upload-blob.js "${{ steps.generate.outputs.video_path }}"
 
       - name: Publish to Instagram
-        if: steps.generate.outputs.video_path != '' && env.INSTAGRAM_ACCESS_TOKEN != ''
+        if: steps.generate.outputs.video_path != '' && steps.upload.outputs.blob_url != '' && env.INSTAGRAM_ACCESS_TOKEN != ''
         env:
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
         run: |
-          VIDEO_URL="${{ steps.deployment.outputs.page_url }}videos/${{ steps.generate.outputs.video_filename }}"
-          node video-automation/scripts/publish-instagram.js "$VIDEO_URL" "${{ steps.generate.outputs.caption }}"
+          node video-automation/scripts/publish-instagram.js "${{ steps.upload.outputs.blob_url }}" "${{ steps.generate.outputs.caption }}"
